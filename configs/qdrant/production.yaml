@@ -1,0 +1,20 @@
+service:
+  http_port: 6333
+  grpc_port: 6334
+  enable_cors: true
+
+storage:
+  # Performance optimization
+  performance:
+    max_search_threads: 0  # Use all available cores
+    max_optimization_threads: 0
+
+  # Write-ahead log settings
+  wal:
+    wal_capacity_mb: 512
+    wal_segments_ahead: 2
+
+log_level: "INFO"
+
+# Telemetry (optional - disable for privacy)
+telemetry_disabled: true
