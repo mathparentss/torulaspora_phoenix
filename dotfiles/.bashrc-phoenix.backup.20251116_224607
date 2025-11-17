@@ -203,10 +203,6 @@ if [[ $- == *i* ]]; then
     echo ""
     echo "═══════════════════════════════════════════════════════════════"
     echo "  PHOENIX PHOENIX LAPTOP READY - Ryzen HX370 + RTX 5080"
-    echo ""
-    if [ -f "/mnt/c/dev/phoenix/configs/motd/phoenix-commands.txt" ]; then
-        cat "/mnt/c/dev/phoenix/configs/motd/phoenix-commands.txt"
-    fi
     echo "═══════════════════════════════════════════════════════════════"
 fi
 
@@ -307,39 +303,3 @@ dnuke() {
 # ═══════════════════════════════════════════════════════════════
 # END OF PHOENIX BASHRC
 # ═══════════════════════════════════════════════════════════════
-
-# ============================================================================
-# PHOENIX BATTLESTACK AUTOMATION - Shell Functions
-# ============================================================================
-
-# Source Phoenix management functions (menu, status, health checks, etc.)
-if [ -f "/mnt/c/dev/phoenix/scripts/phoenix-functions.sh" ]; then
-    source "/mnt/c/dev/phoenix/scripts/phoenix-functions.sh"
-fi
-
-# Display enhanced Phoenix banner on first login (one-time per session)
-if [ -z "$PHOENIX_BANNER_SHOWN" ]; then
-    export PHOENIX_BANNER_SHOWN=1
-    
-    # Show Phoenix banner
-    if [ -f "/mnt/c/dev/phoenix/configs/motd/phoenix-banner.txt" ]; then
-        echo ""
-        cat "/mnt/c/dev/phoenix/configs/motd/phoenix-banner.txt"
-        echo ""
-    fi
-    
-    # Show system status
-    if [ -f "/mnt/c/dev/phoenix/scripts/monitoring/phoenix-status.sh" ]; then
-        bash "/mnt/c/dev/phoenix/scripts/monitoring/phoenix-status.sh"
-        echo ""
-    fi
-    
-    # Show available commands
-        echo ""
-    fi
-fi
-
-# ============================================================================
-# END PHOENIX BATTLESTACK AUTOMATION
-# ============================================================================
-

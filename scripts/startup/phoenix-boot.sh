@@ -26,5 +26,10 @@ echo "[$(date '+%H:%M:%S')] Starting Tier 3..." >> $LOG_FILE
 docker compose -f configs/docker/docker-compose.tier3.yml up -d >> $LOG_FILE 2>&1
 sleep 3
 
+# Start Tier 4 (Exporters)
+echo "[$(date '+%H:%M:%S')] Starting Tier 4..." >> $LOG_FILE
+docker compose -f configs/docker/docker-compose.tier4.yml up -d >> $LOG_FILE 2>&1
+sleep 2
+
 echo "[$(date '+%H:%M:%S')] Boot complete - All tiers started" >> $LOG_FILE
 echo "" >> $LOG_FILE

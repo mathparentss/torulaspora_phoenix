@@ -59,3 +59,7 @@ phgrafana() {
 phadminer() {
     cmd.exe /c start http://localhost:8080
 }
+
+# Tier 4 management
+alias tier4-up='cd /mnt/c/dev/phoenix && docker compose -f configs/docker/docker-compose.tier4.yml up -d'
+alias tier4-down='cd /mnt/c/dev/phoenix && docker compose -f configs/docker/docker-compose.tier4.yml down'

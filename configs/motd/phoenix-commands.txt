@@ -1,0 +1,19 @@
+╔════════════════════════════════════════════════════════════════════╗
+║                    PHOENIX AVAILABLE COMMANDS                   ║
+╠════════════════════════════════════════════════════════════════════╣
+║ Management:                                                        ║
+║   phmenu      - Interactive command center (16 functions)          ║
+║   phstatus    - Display system status                              ║
+║   phask       - Quick AI query (phask "your question")             ║
+║                                                                    ║
+║ Docker:                                                            ║
+║   dps         - List all containers                                ║
+║   tier1-up    - Start Tier 1 (PostgreSQL, Redis)                   ║
+║   tier2-up    - Start Tier 2 (Ollama, Qdrant)                      ║
+║   tier3-up    - Start Tier 3 (n8n, Prometheus, Grafana, etc)       ║
+║                                                                    ║
+║ Database:                                                          ║
+║   phdb        - PostgreSQL CLI                                     ║
+║   phredis     - Redis CLI                                          ║
+║   phgpu       - GPU status                                         ║
+╚════════════════════════════════════════════════════════════════════╝

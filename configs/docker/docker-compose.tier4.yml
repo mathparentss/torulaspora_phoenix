@@ -1,0 +1,99 @@
+services:
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: phoenix_node_exporter
+    restart: unless-stopped
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/host'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host:ro
+    ports:
+      - "127.0.0.1:9100:9100"
+    networks:
+      - phoenix_tier3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+    labels:
+      - phoenix.tier=4
+      - phoenix.service=metrics-exporter
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: phoenix_postgres_exporter
+    restart: unless-stopped
+    environment:
+      - DATA_SOURCE_NAME=postgresql://phoenix:PhoenixDB_2025_Secure!@phoenix_postgres:5432/phoenix_core?sslmode=disable
+    ports:
+      - "127.0.0.1:9187:9187"
+    networks:
+      - phoenix_tier1
+      - phoenix_tier3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+    labels:
+      - phoenix.tier=4
+      - phoenix.service=postgres-metrics
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: phoenix_redis_exporter
+    restart: unless-stopped
+    environment:
+      - REDIS_ADDR=phoenix_redis:6379
+      - REDIS_PASSWORD=PhoenixRedis_2025_Secure!
+    ports:
+      - "127.0.0.1:9121:9121"
+    networks:
+      - phoenix_tier1
+      - phoenix_tier3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+    labels:
+      - phoenix.tier=4
+      - phoenix.service=redis-metrics
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: phoenix_cadvisor
+    restart: unless-stopped
+    privileged: true
+    devices:
+      - /dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    ports:
+      - "127.0.0.1:8081:8080"
+    networks:
+      - phoenix_tier3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    labels:
+      - phoenix.tier=4
+      - phoenix.service=container-metrics
+
+networks:
+  phoenix_tier1:
+    external: true
+  phoenix_tier3:
+    external: true
