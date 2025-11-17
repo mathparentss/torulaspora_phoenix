@@ -1,0 +1,80 @@
+# -----------------------------------------------
+# "Immortal" Greyhat .gitignore
+# -----------------------------------------------
+
+# .gitignore for Phoenix Battlestack: Ignore temps, secrets, builds for opsec and cleanliness.
+# Reference: Git docs (gitignore.io) for Python/Docker/Linux best practices, 2025-aligned.
+
+# --- SECRETS ---
+# NEVER commit environment files
+.env
+*.env
+*.env.example
+.env.example
+*.example
+.example
+
+# --- PYTHON ---
+# IGNORE all virtual environments
+crewai_projects/phoenix/
+
+# Standard Python junk
+__pycache__/
+*.pyc
+
+# --- OS / JUNK ---
+.DS_Store
+.vscode/
+
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+venv/
+.env  # Actual env; use .env.example for template
+
+# Docker
+.docker/
+docker-compose.override.yml  # Local overrides
+
+# Node/JS (for NVM/Svelte in Phase 5)
+node_modules/
+npm-debug.log
+
+# Logs/Temps
+*.log
+tmp/
+temp/
+
+# AI/ML Artifacts (e.g., model checkpoints)
+models/
+checkpoints/
+data/  # Unless versioned datasets
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Secrets/Backups
+*.key
+*.pem
+backups/
+
+# Army-Generated (auto-resurrected)
+# claude.md
+# claude-planning.md
+# claude-tasks.md

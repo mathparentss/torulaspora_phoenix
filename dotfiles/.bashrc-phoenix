@@ -1,0 +1,305 @@
+# ~/.bashrc: Phoenix Laptop Edition
+# Production-grade configuration for Ryzen HX370 + RTX 5080
+# Last updated: November 2025
+
+# ═══════════════════════════════════════════════════════════════
+# CORE BASH CONFIGURATION
+# ═══════════════════════════════════════════════════════════════
+
+# If not running interactively, don't do anything
+case $- in
+    *i*) ;;
+      *) return;;
+esac
+
+# History configuration (larger for power users)
+HISTCONTROL=ignoreboth:erasedups
+HISTSIZE=10000
+HISTFILESIZE=20000
+HISTTIMEFORMAT="%F %T "
+shopt -s histappend
+
+# Window size update
+shopt -s checkwinsize
+
+# Globstar for recursive wildcards
+shopt -s globstar
+
+# Better less experience
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+# Chroot identification
+if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+    debian_chroot=$(cat /etc/debian_chroot)
+fi
+
+# ═══════════════════════════════════════════════════════════════
+# PHOENIX ENVIRONMENT VARIABLES
+# ═══════════════════════════════════════════════════════════════
+
+export PHOENIX_ROOT="/mnt/c/dev/phoenix"
+export PHOENIX_VENV="$PHOENIX_ROOT/phoenix.venv"
+export PHOENIX_CONFIGS="$PHOENIX_ROOT/configs"
+export PHOENIX_DATA="$PHOENIX_ROOT/data"
+export PHOENIX_LOGS="$PHOENIX_ROOT/logs"
+
+# Docker configuration
+export DOCKER_HOST="unix:///var/run/docker.sock"
+export COMPOSE_DOCKER_CLI_BUILD=1
+export DOCKER_BUILDKIT=1
+
+# Python configuration
+export PYTHONUNBUFFERED=1
+export PIP_REQUIRE_VIRTUALENV=true
+
+# Editor preferences
+export EDITOR="nvim"
+export VISUAL="nvim"
+
+# ═══════════════════════════════════════════════════════════════
+# OH-MY-POSH THEME (Greyhat Aesthetic)
+# ═══════════════════════════════════════════════════════════════
+
+if command -v oh-my-posh &> /dev/null; then
+    if [ -f "$PHOENIX_ROOT/dotfiles/my-theme.omp.json" ]; then
+        eval "$(oh-my-posh init bash --config $PHOENIX_ROOT/dotfiles/my-theme.omp.json)"
+    else
+        echo "WARNING:  Oh-My-Posh theme not found at $PHOENIX_ROOT/dotfiles/my-theme.omp.json"
+    fi
+else
+    echo "WARNING:  Oh-My-Posh not installed. Run: sudo wget https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/posh-linux-amd64 -O /usr/local/bin/oh-my-posh && sudo chmod +x /usr/local/bin/oh-my-posh"
+fi
+
+# ═══════════════════════════════════════════════════════════════
+# COLOR SUPPORT
+# ═══════════════════════════════════════════════════════════════
+
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+    alias diff='diff --color=auto'
+fi
+
+# ═══════════════════════════════════════════════════════════════
+# PHOENIX ALIASES (Greyhat Productivity)
+# ═══════════════════════════════════════════════════════════════
+
+# Navigation
+alias phoenix='cd $PHOENIX_ROOT'
+alias pconf='cd $PHOENIX_CONFIGS'
+alias pdata='cd $PHOENIX_DATA'
+alias plogsdir='cd $PHOENIX_LOGS'
+
+# Python venv
+alias penv='source $PHOENIX_VENV/bin/activate'
+alias pdeact='deactivate'
+
+# Docker shortcuts
+alias d='docker'
+alias dc='docker compose'
+alias dps='docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"'
+alias dpsa='docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"'
+alias dlog='docker logs -f'
+alias dexec='docker exec -it'
+alias dclean='docker system prune -af && docker volume prune -f'
+
+# Git shortcuts
+alias g='git'
+alias gs='git status'
+alias ga='git add'
+alias gc='git commit -m'
+alias gp='git push'
+alias gl='git pull'
+alias glog='git log --oneline --graph --decorate --all'
+
+# System monitoring (greyhat style)
+alias htop='btop'
+alias ports='sudo netstat -tulpn | grep LISTEN'
+alias gpu='nvidia-smi'
+alias temp='watch -n 2 sensors'
+
+# Enhanced ls
+alias ll='ls -alFh'
+alias la='ls -A'
+alias l='ls -CF'
+alias lt='ls -alFht'  # Sort by time
+alias lsize='ls -alFhS'  # Sort by size
+
+# Safety nets
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+
+# ═══════════════════════════════════════════════════════════════
+# GREYHAT DOCKER ENVIRONMENTS
+# ═══════════════════════════════════════════════════════════════
+
+# Kali Linux disposable environment
+alias kali="docker run -it --rm --network host kalilinux/kali-rolling /bin/bash"
+
+# Python sandbox
+alias pybox="docker run -it --rm -v $(pwd):/workspace -w /workspace python:3.11 bash"
+
+# Ubuntu sandbox
+alias ubox="docker run -it --rm -v $(pwd):/workspace -w /workspace ubuntu:24.04 bash"
+
+# ═══════════════════════════════════════════════════════════════
+# PHOENIX AUTO-ACTIVATION
+# ═══════════════════════════════════════════════════════════════
+
+# Function to check Docker service
+check_docker() {
+    if ! docker info &> /dev/null; then
+        echo "WARNING:  Docker service not running. Starting..."
+        sudo service docker start
+    fi
+}
+
+# Function to activate Phoenix venv
+activate_phoenix_venv() {
+    if [ -d "$PHOENIX_VENV" ]; then
+        if [ -f "$PHOENIX_VENV/bin/activate" ]; then
+            source "$PHOENIX_VENV/bin/activate"
+            echo "OK: Phoenix venv activated"
+        else
+            echo "WARNING:  Phoenix venv exists but activation script missing"
+        fi
+    else
+        echo "WARNING:  Phoenix venv not found at $PHOENIX_VENV"
+        echo "   Run: python3 -m venv $PHOENIX_VENV"
+    fi
+}
+
+# Function to check Docker stack status
+check_battlestack() {
+    if docker ps --format '{{.Names}}' | grep -q "phoenix_"; then
+        echo "OK: Phoenix Battlestack ONLINE"
+        docker ps --format "table {{.Names}}\t{{.Status}}" | grep "phoenix_"
+    else
+        echo "WARNING:  Phoenix Battlestack OFFLINE"
+        echo "   Start with: phoenix && dc -f configs/docker/docker-compose.tier1.yml up -d"
+    fi
+}
+
+# Auto-run on interactive shell start (non-invasive)
+if [[ $- == *i* ]]; then
+    # Navigate to Phoenix root
+    cd "$PHOENIX_ROOT" 2>/dev/null || cd ~
+    
+    # Check Docker
+    check_docker
+    
+    # Auto-activate venv (silent if already activated)
+    if [ -z "$VIRTUAL_ENV" ]; then
+        activate_phoenix_venv
+    fi
+    
+    # Show Battlestack status (non-blocking)
+    check_battlestack
+    
+    echo ""
+    echo "═══════════════════════════════════════════════════════════════"
+    echo "  PHOENIX PHOENIX LAPTOP READY - Ryzen HX370 + RTX 5080"
+    echo "═══════════════════════════════════════════════════════════════"
+fi
+
+# ═══════════════════════════════════════════════════════════════
+# NODE VERSION MANAGER (NVM) - Optional
+# ═══════════════════════════════════════════════════════════════
+
+export NVM_DIR="$HOME/.nvm"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+    \. "$NVM_DIR/nvm.sh"
+fi
+if [ -s "$NVM_DIR/bash_completion" ]; then
+    \. "$NVM_DIR/bash_completion"
+fi
+
+# ═══════════════════════════════════════════════════════════════
+# BASH COMPLETION
+# ═══════════════════════════════════════════════════════════════
+
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
+fi
+
+# Docker completion
+if [ -f /usr/share/bash-completion/completions/docker ]; then
+    . /usr/share/bash-completion/completions/docker
+fi
+
+# ═══════════════════════════════════════════════════════════════
+# CUSTOM FUNCTIONS (Power Tools)
+# ═══════════════════════════════════════════════════════════════
+
+# Quick Docker container shell
+dsh() {
+    if [ -z "$1" ]; then
+        echo "Usage: dsh <container_name>"
+        return 1
+    fi
+    docker exec -it "$1" /bin/bash || docker exec -it "$1" /bin/sh
+}
+
+# Quick git commit and push
+gcp() {
+    if [ -z "$1" ]; then
+        echo "Usage: gcp '<commit message>'"
+        return 1
+    fi
+    git add .
+    git commit -m "$1"
+    git push
+}
+
+# Find process by port
+port() {
+    if [ -z "$1" ]; then
+        echo "Usage: port <port_number>"
+        return 1
+    fi
+    sudo lsof -i ":$1"
+}
+
+# Quick Python module install in venv
+pinstall() {
+    if [ -z "$VIRTUAL_ENV" ]; then
+        echo "WARNING:  No venv active. Activating Phoenix venv..."
+        source "$PHOENIX_VENV/bin/activate"
+    fi
+    pip install "$@"
+}
+
+
+# Restart Docker service
+drestart() {
+    sudo service docker restart
+    echo "OK: Docker service restarted"
+}
+
+# Clean Docker completely
+dnuke() {
+    echo "WARNING:  This will remove ALL Docker containers, images, and volumes!"
+    read -p "Are you sure? (yes/no): " confirm
+    if [ "$confirm" = "yes" ]; then
+        docker stop $(docker ps -aq) 2>/dev/null
+        docker rm $(docker ps -aq) 2>/dev/null
+        docker rmi $(docker images -q) 2>/dev/null
+        docker volume rm $(docker volume ls -q) 2>/dev/null
+        docker network prune -f
+        echo "OK: Docker nuked"
+    else
+        echo "Cancelled"
+    fi
+}
+
+# ═══════════════════════════════════════════════════════════════
+# END OF PHOENIX BASHRC
+# ═══════════════════════════════════════════════════════════════

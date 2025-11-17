@@ -1,0 +1,1 @@
+alias plogs='docker ps --format "{{.Names}}" | grep "phoenix_"'
