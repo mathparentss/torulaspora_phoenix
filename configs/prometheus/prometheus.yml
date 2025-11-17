@@ -1,31 +1,48 @@
+# Prometheus Configuration for Phoenix Tier 0-2 Monitoring
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
+  external_labels:
+    cluster: 'phoenix'
+    environment: 'production'
 
+# Alertmanager configuration (optional, can add later)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: []
+
+# Scrape configurations
 scrape_configs:
+  # Prometheus self-monitoring
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
-
-  - job_name: 'node'
-    static_configs:
-      - targets: ['host.docker.internal:9100']
         labels:
-          instance: 'saccharomyces'
+          tier: '3'
+          service: 'prometheus'
 
-  - job_name: 'docker'
-    static_configs:
-      - targets: ['host.docker.internal:9323']
+  # PostgreSQL metrics (requires postgres_exporter - Tier 4)
+  # - job_name: 'postgresql'
+  #   static_configs:
+  #     - targets: ['postgres_exporter:9187']
 
-  - job_name: 'postgres'
-    static_configs:
-      - targets: ['postgres_db:9187']
+  # Redis metrics (requires redis_exporter - Tier 4)
+  # - job_name: 'redis'
+  #   static_configs:
+  #     - targets: ['redis_exporter:9121']
 
-  - job_name: 'redis'
-    static_configs:
-      - targets: ['redis_cache:9121']
+  # Ollama metrics (if exposed)
+  # - job_name: 'ollama'
+  #   static_configs:
+  #     - targets: ['phoenix_ollama:11434']
 
-  - job_name: 'n8n'
-    static_configs:
-      - targets: ['n8n_automation:5678']
-        metrics_path: '/metrics'
+  # Qdrant metrics (if exposed)
+  # - job_name: 'qdrant'
+  #   static_configs:
+  #     - targets: ['phoenix_qdrant:6333']
+
+  # Node exporter for system metrics (Tier 4)
+  # - job_name: 'node'
+  #   static_configs:
+  #     - targets: ['node_exporter:9100']
