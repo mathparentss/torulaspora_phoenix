@@ -1,0 +1,42 @@
+# Phoenix Battlestack - Python Dependencies
+# Generated: 2025-11-17 Phase 00 Complete
+
+# Core Framework
+fastapi==0.121.2
+uvicorn==0.38.0
+psycopg2-binary==2.9.11
+
+# AI/LLM Orchestration
+crewai==1.5.0
+crewai-tools==1.5.0
+langchain==1.0.7
+langchain-community==0.4.1
+langchain-core==1.0.5
+langchain-text-splitters==1.0.0
+
+# Voice/Audio Processing
+openai-whisper>=20231117
+soundfile>=0.12.1
+pydub>=0.25.1
+
+# OCR/Document Processing
+pytesseract>=0.3.10
+pdf2image>=1.17.0
+PyMuPDF>=1.24.0
+easyocr>=1.7.0
+Pillow>=10.0.0
+opencv-python-headless>=4.8.0
+
+# Multilingual Support
+langdetect>=1.0.9
+deep-translator>=1.11.4
+
+# Utilities
+python-multipart>=0.0.9
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Already installed system-wide via apt:
+# - tesseract-ocr (+ fra, spa language packs)
+# - poppler-utils (pdf2image backend)
+# - ffmpeg (audio processing)
