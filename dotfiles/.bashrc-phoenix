@@ -371,4 +371,397 @@ export OPENAI_BASE_URL="http://localhost:11434/v1"
 # ============================================================================
 
 
+# ============================================================================
+# PHOENIX BATTLESTACK — PROFESSIONAL .BASHRC ADDITIONS
+# Add to: /mnt/c/dev/phoenix/dotfiles/.bashrc-phoenix
+# ============================================================================
+
+# ============================================================================
+# SECTION 1: PHOENIX CORE STATUS
+# ============================================================================
+
+# Master status check (all services)
+ph-status() {
+    echo "=== PHOENIX BATTLESTACK STATUS ==="
+    docker ps --filter name=phoenix_ --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | \
+        grep -E "(phoenix_|NAMES)" | \
+        sed 's/phoenix_//g' | \
+        column -t
+    echo ""
+    echo "GPU: $(nvidia-smi --query-gpu=name,memory.used,memory.total --format=csv,noheader 2>/dev/null || echo 'Not available')"
+}
+
+# Quick health check (only unhealthy/down services)
+ph-health() {
+    echo "=== PHOENIX HEALTH ALERTS ==="
+    docker ps --filter name=phoenix_ --format "{{.Names}}: {{.Status}}" | \
+        grep -v "healthy\|Up" | \
+        sed 's/phoenix_//g' || echo "✓ All services healthy"
+}
+
+# GPU monitoring
+ph-gpu() {
+    if ! command -v nvidia-smi &> /dev/null; then
+        echo "❌ NVIDIA drivers not available"
+        return 1
+    fi
+    
+    echo "=== PHOENIX GPU STATUS ==="
+    nvidia-smi --query-gpu=timestamp,name,utilization.gpu,utilization.memory,memory.used,memory.total,temperature.gpu,power.draw --format=csv
+    echo ""
+    echo "=== OLLAMA CONTAINER ==="
+    docker exec phoenix_ollama nvidia-smi 2>/dev/null || echo "❌ GPU not visible in Ollama container"
+}
+
+# Live GPU monitoring (updates every 3s)
+ph-gpu-watch() {
+    watch -n 3 "nvidia-smi --query-gpu=timestamp,name,utilization.gpu,utilization.memory,memory.used,memory.total,temperature.gpu,power.draw --format=csv,noheader && echo '' && docker stats --no-stream phoenix_ollama 2>/dev/null"
+}
+
+# ============================================================================
+# SECTION 2: DATABASE OPERATIONS
+# ============================================================================
+
+# Connect to PostgreSQL
+ph-db() {
+    docker exec -it phoenix_postgres psql -U phoenix -d phoenix_core
+}
+
+# Quick database query
+ph-query() {
+    local query="$1"
+    if [[ -z "$query" ]]; then
+        echo "Usage: ph-query 'SELECT * FROM core.companies LIMIT 5;'"
+        return 1
+    fi
+    docker exec -i phoenix_postgres psql -U phoenix -d phoenix_core -c "$query"
+}
+
+# List all schemas
+ph-schemas() {
+    ph-query "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('pg_catalog', 'information_schema', 'pg_toast') ORDER BY schema_name;"
+}
+
+# Count tables per schema
+ph-tables() {
+    ph-query "SELECT schemaname, COUNT(*) AS table_count FROM pg_tables WHERE schemaname IN ('core','events','intelligence','agents','neuroscience','enrichment','products') GROUP BY schemaname ORDER BY schemaname;"
+}
+
+# Database backup
+ph-backup() {
+    local timestamp=$(date +%Y%m%d_%H%M%S)
+    local backup_dir="/mnt/c/dev/phoenix/backups"
+    mkdir -p "$backup_dir"
+    
+    echo "🔄 Backing up phoenix_core..."
+    docker exec phoenix_postgres pg_dump -U phoenix phoenix_core | gzip > "$backup_dir/phoenix_core_${timestamp}.sql.gz"
+    
+    if [[ $? -eq 0 ]]; then
+        echo "✓ Backup saved: $backup_dir/phoenix_core_${timestamp}.sql.gz"
+        ls -lh "$backup_dir" | tail -1
+    else
+        echo "❌ Backup failed"
+        return 1
+    fi
+}
+
+# Database restore
+ph-restore() {
+    local backup_file="$1"
+    if [[ -z "$backup_file" || ! -f "$backup_file" ]]; then
+        echo "Usage: ph-restore /path/to/backup.sql.gz"
+        echo "Available backups:"
+        ls -lh /mnt/c/dev/phoenix/backups/*.sql.gz 2>/dev/null || echo "No backups found"
+        return 1
+    fi
+    
+    echo "⚠️  This will overwrite phoenix_core database. Continue? (yes/no)"
+    read -r confirm
+    if [[ "$confirm" != "yes" ]]; then
+        echo "Cancelled"
+        return 0
+    fi
+    
+    echo "🔄 Restoring database..."
+    gunzip -c "$backup_file" | docker exec -i phoenix_postgres psql -U phoenix -d phoenix_core
+    
+    if [[ $? -eq 0 ]]; then
+        echo "✓ Database restored"
+    else
+        echo "❌ Restore failed"
+        return 1
+    fi
+}
+
+# ============================================================================
+# SECTION 3: SERVICE MANAGEMENT
+# ============================================================================
+
+# Restart specific service
+ph-restart() {
+    local service="$1"
+    if [[ -z "$service" ]]; then
+        echo "Usage: ph-restart <service>"
+        echo "Available services:"
+        docker ps --filter name=phoenix_ --format "{{.Names}}" | sed 's/phoenix_/  - /g'
+        return 1
+    fi
+    
+    echo "🔄 Restarting phoenix_${service}..."
+    docker restart "phoenix_${service}"
+    sleep 2
+    docker ps --filter name="phoenix_${service}" --format "{{.Names}}: {{.Status}}"
+}
+
+# Stop all Phoenix services
+ph-stop() {
+    echo "⚠️  Stopping all Phoenix services..."
+    docker ps --filter name=phoenix_ --format "{{.Names}}" | xargs -r docker stop
+    echo "✓ All services stopped"
+}
+
+# Start all Phoenix services
+ph-start() {
+    echo "🚀 Starting Phoenix Battlestack..."
+    cd /mnt/c/dev/phoenix/docker && docker-compose up -d
+    sleep 5
+    ph-status
+}
+
+# Full system restart
+ph-reboot() {
+    echo "🔄 Rebooting Phoenix Battlestack..."
+    ph-stop
+    sleep 2
+    ph-start
+}
+
+# ============================================================================
+# SECTION 4: LOGS & DEBUGGING
+# ============================================================================
+
+# Tail logs for service
+ph-logs() {
+    local service="$1"
+    local lines="${2:-100}"
+    
+    if [[ -z "$service" ]]; then
+        echo "Usage: ph-logs <service> [lines]"
+        echo "Available services:"
+        docker ps --filter name=phoenix_ --format "{{.Names}}" | sed 's/phoenix_/  - /g'
+        return 1
+    fi
+    
+    docker logs -f --tail "$lines" "phoenix_${service}"
+}
+
+# Show recent errors across all services
+ph-errors() {
+    echo "=== PHOENIX ERROR LOG (Last 50 lines) ==="
+    for service in $(docker ps --filter name=phoenix_ --format "{{.Names}}"); do
+        echo ""
+        echo "--- ${service} ---"
+        docker logs --tail 50 "$service" 2>&1 | grep -iE "error|fail|fatal|exception" || echo "No errors"
+    done
+}
+
+# Disk usage check
+ph-disk() {
+    echo "=== PHOENIX DISK USAGE ==="
+    docker system df
+    echo ""
+    echo "=== VOLUMES ==="
+    docker volume ls --filter name=phoenix_ --format "{{.Name}}: {{.Size}}" 2>/dev/null || \
+        docker volume ls --filter name=phoenix_
+}
+
+# ============================================================================
+# SECTION 5: OLLAMA/LLM OPERATIONS
+# ============================================================================
+
+# List loaded Ollama models
+ph-models() {
+    echo "=== OLLAMA MODELS ==="
+    docker exec phoenix_ollama ollama list
+}
+
+# Run inference test
+ph-inference() {
+    local model="${1:-llama3.2:3b}"
+    local prompt="${2:-Explain Phoenix in 10 words}"
+    
+    echo "🧠 Testing inference: $model"
+    echo "Prompt: $prompt"
+    echo ""
+    time docker exec phoenix_ollama ollama run "$model" "$prompt" --verbose
+}
+
+# Pull new model
+ph-pull() {
+    local model="$1"
+    if [[ -z "$model" ]]; then
+        echo "Usage: ph-pull <model>"
+        echo "Examples: llama3.2:3b, qwen2.5-coder:7b, gemma2:9b"
+        return 1
+    fi
+    
+    echo "📥 Pulling model: $model"
+    docker exec phoenix_ollama ollama pull "$model"
+}
+
+# Remove model
+ph-rm-model() {
+    local model="$1"
+    if [[ -z "$model" ]]; then
+        echo "Usage: ph-rm-model <model>"
+        ph-models
+        return 1
+    fi
+    
+    echo "🗑️  Removing model: $model"
+    docker exec phoenix_ollama ollama rm "$model"
+}
+
+# ============================================================================
+# SECTION 6: AGENT OPERATIONS
+# ============================================================================
+
+# List active agents
+ph-agents() {
+    ph-query "SELECT agent_name, agent_class, agent_type, status, tasks_completed, dopamine_points FROM agents.agent_registry WHERE is_enabled = TRUE ORDER BY dopamine_points DESC;" 2>/dev/null || \
+        echo "❌ Agents schema not deployed yet"
+}
+
+# Show pending tasks
+ph-tasks() {
+    ph-query "SELECT task_id, task_type, status, priority_score, created_at FROM agents.tasks WHERE status IN ('pending', 'assigned', 'in_progress') ORDER BY priority_score DESC LIMIT 20;" 2>/dev/null || \
+        echo "❌ Agents schema not deployed yet"
+}
+
+# Show agent leaderboard
+ph-leaderboard() {
+    ph-query "SELECT agent_name, agent_class, dopamine_points, current_streak, best_streak, tasks_completed, accuracy_score FROM agents.agent_registry WHERE is_enabled = TRUE ORDER BY dopamine_points DESC LIMIT 10;" 2>/dev/null || \
+        echo "❌ Agents schema not deployed yet"
+}
+
+# ============================================================================
+# SECTION 7: DEVELOPMENT WORKFLOW
+# ============================================================================
+
+# Quick commit (auto-add modified files)
+ph-commit() {
+    local message="$1"
+    if [[ -z "$message" ]]; then
+        echo "Usage: ph-commit 'commit message'"
+        return 1
+    fi
+    
+    git add -u
+    git commit -m "$message"
+    git push
+}
+
+# Show git status with branch info
+ph-git() {
+    echo "=== GIT STATUS ==="
+    git status -sb
+    echo ""
+    echo "=== RECENT COMMITS ==="
+    git log --oneline -5
+}
+
+# Clean docker system (safe)
+ph-clean() {
+    echo "🧹 Cleaning Docker system..."
+    docker system prune -f
+    echo "✓ Cleanup complete"
+}
+
+# Full nuclear clean (WARNING: removes all unused volumes/images)
+ph-nuke() {
+    echo "☢️  WARNING: This will remove ALL unused Docker resources"
+    echo "Continue? (type 'NUKE' to confirm)"
+    read -r confirm
+    if [[ "$confirm" != "NUKE" ]]; then
+        echo "Cancelled"
+        return 0
+    fi
+    
+    docker system prune -af --volumes
+    echo "✓ Nuclear clean complete"
+}
+
+# ============================================================================
+# SECTION 8: SHORTCUTS & ALIASES
+# ============================================================================
+
+alias phs='ph-status'
+alias phh='ph-health'
+alias phg='ph-gpu'
+alias phd='ph-db'
+alias phl='ph-logs'
+alias phm='ph-models'
+alias pha='ph-agents'
+alias pht='ph-tasks'
+
+# ============================================================================
+# SECTION 9: CONTEXT AWARENESS
+# ============================================================================
+
+# Show current Phoenix environment info
+ph-info() {
+    echo "=== PHOENIX ENVIRONMENT ==="
+    echo "Location: /mnt/c/dev/phoenix"
+    echo "Hostname: $(hostname)"
+    echo "User: $(whoami)"
+    echo "Git branch: $(git branch --show-current 2>/dev/null || echo 'Not a git repo')"
+    echo ""
+    echo "=== SYSTEM ==="
+    echo "CPU: $(lscpu | grep 'Model name' | cut -d: -f2 | xargs)"
+    echo "RAM: $(free -h | awk '/^Mem:/ {print $2 " total, " $3 " used"}')"
+    echo "GPU: $(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null || echo 'Not available')"
+    echo ""
+    echo "=== DOCKER ==="
+    echo "Services: $(docker ps --filter name=phoenix_ | wc -l) running"
+    echo "Disk: $(docker system df --format "{{.Type}}: {{.Size}}" | grep "Local Volumes" || echo 'Unknown')"
+}
+
+# Generate daily status report
+ph-report() {
+    local report_file="/mnt/c/dev/phoenix/logs/daily_report_$(date +%Y%m%d).txt"
+    
+    {
+        echo "PHOENIX DAILY REPORT — $(date)"
+        echo "========================================"
+        echo ""
+        ph-status
+        echo ""
+        ph-health
+        echo ""
+        ph-gpu
+        echo ""
+        ph-schemas
+        echo ""
+        ph-agents 2>/dev/null || echo "Agents not deployed"
+        echo ""
+        ph-disk
+    } > "$report_file"
+    
+    echo "✓ Report saved: $report_file"
+    echo ""
+    tail -20 "$report_file"
+}
+
+# ============================================================================
+# AUTO-INIT ON SHELL START
+# ============================================================================
+
+# Show quick status when opening terminal (comment out if annoying)
+# ph-health
+
+echo "🔥 Phoenix Battlestack loaded. Type 'ph-info' for environment details."
+
+# ============================================================================
+# END OF PHOENIX .BASHRC ADDITIONS
+# ============================================================================
 

@@ -5,6 +5,8 @@ services:
     image: ollama/ollama:latest
     container_name: phoenix_ollama
     restart: unless-stopped
+    # GPU Runtime - Required for CUDA access in Docker Compose v3
+    runtime: nvidia
     ports:
       - "127.0.0.1:11434:11434"
     volumes:
@@ -69,12 +71,14 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
+    # Health check disabled - Qdrant container doesn't include curl/wget
+    # Service health verified via external monitoring
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 20s
     labels:
       - "phoenix.tier=2"
       - "phoenix.service=vector-db"
