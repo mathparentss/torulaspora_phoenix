@@ -343,7 +343,28 @@ fi
 # ============================================================================
 
 # Google Cloud SDK
+
 export PATH="$HOME/google-cloud-sdk/bin:$PATH"
+
+# ============================================================================
+# GIT SSH AUTO-AUTHENTICATION
+# ============================================================================
+
+# Start SSH agent and load GitHub key automatically
+
+if [ -z "$SSH_AUTH_SOCK" ]; then
+    eval "$(ssh-agent -s)" > /dev/null 2>&1
+    ssh-add ~/.ssh/github_phoenix > /dev/null 2>&1
+fi
+
+# ============================================================================
+# CREWAI CONFIGS
+# ============================================================================
+
+# CrewAI Ollama Configuration
+
+export OPENAI_API_KEY="sk-fake-key-for-local-ollama"
+export OPENAI_BASE_URL="http://localhost:11434/v1"
 
 # ============================================================================
 # END PHOENIX BATTLESTACK AUTOMATION
