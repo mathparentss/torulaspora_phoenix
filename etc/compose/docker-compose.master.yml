@@ -1,0 +1,25 @@
+networks:
+  phoenix_tier1:
+    external: true
+  phoenix_tier2:
+    external: true
+  phoenix_tier3:
+    external: true
+
+volumes:
+  phoenix_postgres_data:
+    external: true
+  phoenix_redis_data:
+    external: true
+  phoenix_ollama_data:
+    external: true
+  phoenix_qdrant_data:
+    external: true
+  phoenix_n8n_data:
+    external: true
+  phoenix_grafana_data:
+    external: true
+  phoenix_prometheus_data:
+    external: true
+  phoenix_portainer_data:
+    external: true

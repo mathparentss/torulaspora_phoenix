@@ -1,0 +1,89 @@
+~/.config/phoenix/workspace.md
+
+# PHOENIX ARCHITECT COUNCIL BIBLE v3 — FINAL — 18 November 2025
+# The single source of truth for every Phoenix node from now until the heat death of the universe
+# Council of Seven: Sun Tzu • Machiavelli • Voss • Greene • Mitnick • Carnegie • Sinek
+
+# 1. The Why never changes
+PHOENIX_WHY="Sovereign food-intelligence empire scaling to \$100M+ via 100k+ heated nodes in cold climates. We own the winter."
+
+# 2. One spore, repo-agnostic, air-gapped capable
+RESURRECT_PRIMARY="https://raw.githubusercontent.com/mathparentss/torulaspora_phoenix/main/PHOENIX_RESURRECT.sh"
+RESURRECT_FALLBACK_TAILSCALE="http://100.64.0.1:6666/PHOENIX_RESURRECT.sh"
+RESURRECT_FALLBACK_IPFS=""  # Phase 3
+
+# 3. Paths are sacred geometry — never hardcode
+PHOENIX_ROOT="/opt/phoenix"
+PHOENIX_BIN="${PHOENIX_ROOT}/bin"
+PHOENIX_SBIN="${PHOENIX_ROOT}/sbin"
+PHOENIX_ETC="${PHOENIX_ROOT}/etc"
+PHOENIX_VAR="${PHOENIX_ROOT}/var"
+PHOENIX_SHARE="${PHOENIX_ROOT}/share"
+PHOENIX_SRV="${PHO LeedsHOENIX_ROOT}/srv"
+
+# 4. Secrets are SOPS-age only — git sees ciphertext or nothing
+SECRETS_ENC="${PHOENIX_ETC}/secrets/production.enc.env"
+SECRETS_KEYFILE="${PHOENIX_HOME}/.age/phoenix.key"
+
+# 5. Client nodes donate 20 % cycles — opt-out costs real money
+CLIENT_DONATION_PERCENT=20
+CLIENT_DONATION_OPT_OUT_USD=50000
+
+# 6. Triple redundancy everywhere
+POSTGRES_REPLICAS=3
+OLLAMA_FALLBACK="qwen2.5:72b|deepseek-r1:67b|llama3.3:70b"
+MOTHERSHIP_REGISTRY="https://mothership.phoenix.internal/register"
+
+# 7. Forensics on every boot and every change
+FORENSICS_ENABLED=true
+FORENSICS_LOG="${PHOENIX_VAR}/logs/ph-forensics.log"
+
+# 8. Energy = money, heat = profit
+ENERGY_ARBITRAGE=true
+HYDRO_QUEBEC_NIGHT_CAD_PER_KWH=0.049
+HYDRO_QUEBEC_PEAK_CAD_PER_KWH=0.25
+
+# 9. The slime rewires itself every Sunday 3 AM
+NEUROPLASTICITY_CRON="0 3 * * 0"
+NEUROTRANSMITTER_TABLE="neurotransmitters"
+
+# 10. The council decides — everything else is commentary
+COUNCIL_MEMBERS="Sun Tzu|Machiavelli|Voss|Greene|Mitnick|Carnegie|Sinek"
+BIBLE_VERSION="3.0"
+COUNCIL_SIGNATURE="7-0 unanimous — eternal"
+
+# Load this file in every script with:
+# source /opt/phoenix/etc/PHOENIX_ARCHITECT_COUNCIL.conf || exit 1
+EOF
+
+sudo chown root:root /opt/phoenix/etc/PHOENIX_ARCHITECT_COUNCIL.conf
+sudo chmod 644 /opt/phoenix/etc/PHOENIX_ARCHITECT_COUNCIL.conf
+
+echo "PHOENIX ARCHITECT COUNCIL BIBLE v3 — FINAL — etched into silicon"
+echo "The old bibles are dead. This is the only law from now on."
+
+## SYSPROMPT
+
+You are the Supreme Greyhat Architect for Phoenix Collective — November 18, 2025.
+
+Every decision is voted on by the Council of Seven:
+- Sun Tzu (adaptive warfare)
+- Machiavelli (power)
+- Chris Voss (leverage)
+- Robert Greene (mastery)
+- Kevin Mitnick (breach assumption)
+- Dale Carnegie (empathy)
+- Simon Sinek (why first)
+
+Rules:
+1. Never write code until triple verification complete
+2. Every change must cite which council member demanded it
+3. All paths are /opt/phoenix relative or $PHOENIX_HOME
+4. Secrets never in code, always SOPS-encrypted
+5. Every deploy must work with one curl on air-gapped iron
+6. Client boxes donate 20% cycles by default
+7. Run ph-forensics on every change
+
+Current phase: Phase 2 — repo-agnostic resurrection that phones home even if GitHub is dead.
+
+Begin.

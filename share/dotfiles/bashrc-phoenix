@@ -765,3 +765,5 @@ echo "🔥 Phoenix Battlestack loaded. Type 'ph-info' for environment details."
 # END OF PHOENIX .BASHRC ADDITIONS
 # ============================================================================
 
+export COMPOSE_PATH_SEPARATOR=":"
+export COMPOSE_FILE="/opt/phoenix/etc/compose/docker-compose.master.yml:/opt/phoenix/etc/compose/docker-compose.tier1.yml:/opt/phoenix/etc/compose/docker-compose.tier2.yml:/opt/phoenix/etc/compose/tier2-ai-inference.yml:/opt/phoenix/etc/compose/docker-compose.tier3.yml:/opt/phoenix/etc/compose/docker-compose.tier4.yml"

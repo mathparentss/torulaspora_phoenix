@@ -22,7 +22,8 @@ services:
       POSTGRES_SHARED_BUFFERS: 256MB
     
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+       - postgres_data:
+    external: true
       - /opt/phoenix/etc/schemas/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     
     ports:
@@ -61,7 +62,8 @@ services:
       --maxmemory-policy allkeys-lru
     
     volumes:
-      - redis_data:/data
+       - redis_data:
+    external: true
     
     ports:
       - "127.0.0.1:6379:6379"

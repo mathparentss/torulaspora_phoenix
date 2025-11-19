@@ -15,7 +15,7 @@ def get_db():
         port=5432,
         database="phoenix_core",
         user="phoenix",
-        password="PhoenixDB_2025_Secure!"
+        password="${POSTGRES_PASSWORD}!"
     )
 
 class Task(BaseModel):

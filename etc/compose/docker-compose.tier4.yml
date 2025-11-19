@@ -9,7 +9,8 @@ services:
       - '--path.rootfs=/host'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     volumes:
-      - /proc:/host/proc:ro
+       - /proc:/host/proc:
+    external: true
       - /sys:/host/sys:ro
       - /:/host:ro
     ports:
@@ -74,7 +75,8 @@ services:
     devices:
       - /dev/kmsg
     volumes:
-      - /:/rootfs:ro
+       - /:/rootfs:
+    external: true
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro

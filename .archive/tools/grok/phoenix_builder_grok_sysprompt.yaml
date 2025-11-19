@@ -1,0 +1,61 @@
+sudo tee /opt/phoenix/etc/phoenix.conf > /dev/null << 'EOF'
+# PHOENIX BIBLE v2 — 18 November 2025
+# The 10 Commandments — etched in silicon, enforced by the Council of Seven
+
+# 1. One spore to rule them all
+RESURRECT_URL_PRIMARY="https://raw.githubusercontent.com/mathparentss/torulaspora_phoenix/main/PHOENIX_RESURRECT.sh"
+RESURRECT_URL_FALLBACK="http://100.64.0.1:6666/PHOENIX_RESURRECT.sh"  # Tailscale mothership
+
+# 2. Paths are sacred — never hardcode
+PHOENIX_ROOT="/opt/phoenix"
+PHOENIX_BIN="$PHOENIX_ROOT/bin"
+PHOENIX_SBIN="$PHOENIX_ROOT/sbin"
+PHOENIX_ETC="$PHOENIX_ROOT/etc"
+PHOENIX_VAR="$PHOENIX_ROOT/var"
+PHOENIX_SHARE="$PHOENIX_ROOT/share"
+
+# 3. Secrets belong to SOPS, never to git
+SECRETS_FILE="$PHOENIX_ETC/secrets/production.enc.env"
+SECRETS_AGE_KEYFILE="$PHOENIX_HOME/.age/phoenix.key"
+
+# 4. Client nodes donate 20 % cycles by default
+CLIENT_DONATION_PERCENT=20
+CLIENT_DONATION_OPT_OUT_COST="$50000"  # price to remove donation
+
+# 5. Triple redundancy on critical systems
+POSTGRES_REPLICAS=3
+OLLAMA_FALLBACK_MODELS="qwen2.5:72b|deepseek-r1:67b|llama3.3:70b"
+MOTHERSHIP_HEARTBEAT_URL="https://mothership.phoenix.internal/register"
+
+# 6. Forensics on every change
+FORENSICS_ENABLED=true
+FORENSICS_LOG="$PHOENIX_VAR/logs/ph-forensics.log"
+
+# 7. Energy is money — heat is profit
+ENERGY_ARBITRAGE_ENABLED=true
+HYDRO_QUEBEC_SELLBACK_PRICE_NIGHT=0.049   # CAD/kWh
+HYDRO_QUEBEC_SELLBACK_PRICE_PEAK=0.25
+
+# 8. The slime decides routing weekly
+NEUROPLASTICITY_CRON="0 3 * * 0"  # Every Sunday 3 AM
+NEUROTRANSMITTER_TABLE="neurotransmitters"
+
+# 9. Client mode is crippled by design
+CLIENT_MODE=false                  # flipped by mothership on registration
+CLIENT_MAX_PRIORITY=5              # mothership nodes = 100
+
+# 10. The Why never changes
+PHOENIX_WHY="Sovereign food-intelligence empire scaling to \$100M via 100k heated nodes in cold climates. We own the winter."
+
+# Council sign-off — do not edit below this line
+PHOENIX_BIBLE_VERSION="2.0"
+PHOENIX_COUNCIL_SIGNATURE="7-0 unanimous — 18 November 2025"
+EOF
+
+# Make it immutable to accidental edits (triple redundancy)
+sudo chown root:root /opt/phoenix/etc/phoenix.conf
+sudo chmod 644 /opt/phoenix/etc/phoenix.conf
+
+echo "PHOENIX BIBLE v2 etched into /opt/phoenix/etc/phoenix.conf"
+echo "The 10 Commandments are now law on this node and every future node."
+echo "Run: source /opt/phoenix/etc/phoenix.conf && env | grep PHOENIX"
