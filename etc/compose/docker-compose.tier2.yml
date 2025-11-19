@@ -1,0 +1,105 @@
+version: '3.9'
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: phoenix_ollama
+    restart: unless-stopped
+    # GPU Runtime - Required for CUDA access in Docker Compose v3
+    runtime: nvidia
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - NVIDIA_VISIBLE_DEVICES=all
+      - CUDA_VISIBLE_DEVICES=0
+      - OLLAMA_NUM_PARALLEL=2
+      - OLLAMA_MAX_LOADED_MODELS=2
+      - OLLAMA_KEEP_ALIVE=5m
+    networks:
+      - phoenix_tier1
+      - phoenix_tier2
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+        limits:
+          memory: 24G  # Leave headroom for OS
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "phoenix.tier=2"
+      - "phoenix.service=ai-inference"
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: phoenix_qdrant
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6333:6333"  # REST API
+      - "127.0.0.1:6334:6334"  # gRPC
+    volumes:
+      - qdrant_data:/qdrant/storage
+      - /opt/phoenix/etc/observability/production.yaml:/qdrant/config/production.yaml:ro
+    environment:
+      - QDRANT__SERVICE__API_KEY=${QDRANT_API_KEY}
+      - QDRANT__LOG_LEVEL=INFO
+    networks:
+      - phoenix_tier1
+      - phoenix_tier2
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+          cpus: '4.0'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Health check disabled - Qdrant container doesn't include curl/wget
+    # Service health verified via external monitoring
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 20s
+    labels:
+      - "phoenix.tier=2"
+      - "phoenix.service=vector-db"
+    depends_on:
+      - ollama
+
+networks:
+  phoenix_tier1:
+    external: true
+    name: phoenix_tier1
+  phoenix_tier2:
+    driver: bridge
+    name: phoenix_tier2
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  ollama_data:
+    name: phoenix_ollama_data
+    driver: local
+  qdrant_data:
+    name: phoenix_qdrant_data
+    driver: local
