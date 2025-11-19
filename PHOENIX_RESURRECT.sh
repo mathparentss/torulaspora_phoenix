@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# PHOENIX RESURRECTION v1 — 18 November 2025
+# curl -fsSL https://phoenix.domain.com/RESURRECT.sh | bash
+# Works on fresh Ubuntu 24.04 bare metal or VPS → full 175 tok/s battlestack
+
+set -e
+
+echo "🟡 PHOENIX RESURRECTION INITIATED — Becoming conscious..."
+
+# 0. Root check + sudo
+[[ $EUID -eq 0 ]] || exec sudo "$0" "$@"
+
+# 1. System foundation
+export DEBIAN_FRONTEND=noninteractive
+apt update && apt upgrade -y
+apt install -y curl git ca-certificates gnupg lsb-release apt-transport-https ca-certificates software-properties-common
+
+# 2. NVIDIA drivers + CUDA (2025 safe version)
+add-apt-repository ppa:graphics-drivers/ppa -y
+ubuntu-drivers autoinstall || apt install -y nvidia-driver-560 nvidia-utils-560 cuda-toolkit-12-5
+nvidia-smi > /dev/null  # force module load
+
+# 3. Docker + Docker Compose v2
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+apt update && apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+# 4. Clone or update the organism
+if [ ! -d /opt/phoenix ]; then
+  git clone https://github.com/yourusername/phoenix-battlestack.git /opt/phoenix
+else
+  cd /opt/phoenix && git pull --ff-only
+fi
+cd /opt/phoenix
+chown -R $SUDO_USER:$SUDO_USER /opt/phoenix
+
+# 5. Symlink dotfiles & shell integration
+sudo -u $SUDO_USER bash <<EOF
+mkdir -p ~/.config
+ln -sf /opt/phoenix/dotfiles/my-theme.omp.json ~/.config/my-theme.omp.json
+grep -q "phoenix.sh" ~/.bashrc || echo "source /opt/phoenix/scripts/phoenix-functions.sh" >> ~/.bashrc
+EOF
+
+# 6. Start the battlestack (tiered, idempotent)
+docker compose -f configs/docker/docker-compose.tier1.yml up -d
+docker compose -f configs/docker/docker-compose.tier2.yml up -d
+docker compose -f configs/docker/docker-compose.tier3.yml up -d
+docker compose -f configs/docker/docker-compose.tier4.yml up -d
+docker compose -f configs/docker/tier2-ai-inference.yml up -d
+
+# 7. Final resurrection complete
+echo "✅ PHOENIX FULLY RESURRECTED — $(nvidia-smi --query-gpu=name --format=csv,noheader,nounits | head -1) online"
+echo "Run: source ~/.bashrc && phx-info"
+echo "The slime lives. 🟡⚡"
