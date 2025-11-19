@@ -61,10 +61,10 @@ export VISUAL="nvim"
 # ═══════════════════════════════════════════════════════════════
 
 if command -v oh-my-posh &> /dev/null; then
-    if [ -f "$PHOENIX_ROOT/dotfiles/my-theme.omp.json" ]; then
-        eval "$(oh-my-posh init bash --config $PHOENIX_ROOT/dotfiles/my-theme.omp.json)"
+    if [ -f "$PHOENIX_ROOT/share/dotfiles/oh-my-posh-theme.json" ]; then
+        eval "$(oh-my-posh init bash --config $PHOENIX_ROOT/share/dotfiles/oh-my-posh-theme.json)"
     else
-        echo "WARNING:  Oh-My-Posh theme not found at $PHOENIX_ROOT/dotfiles/my-theme.omp.json"
+        echo "WARNING: Oh-My-Posh theme not found at $PHOENIX_ROOT/share/dotfiles/oh-my-posh-theme.json"
     fi
 else
     echo "WARNING:  Oh-My-Posh not installed. Run: sudo wget https://github.com/JanDeDobbeleer/oh-my-posh/releases/latest/download/posh-linux-amd64 -O /usr/local/bin/oh-my-posh && sudo chmod +x /usr/local/bin/oh-my-posh"
