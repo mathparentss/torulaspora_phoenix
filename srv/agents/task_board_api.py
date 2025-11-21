@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import json
+import os
 from datetime import datetime
 from typing import Optional
 
@@ -15,7 +16,7 @@ def get_db():
         port=5432,
         database="phoenix_core",
         user="phoenix",
-        password="${POSTGRES_PASSWORD}!"
+        password=os.getenv('POSTGRES_PASSWORD')
     )
 
 class Task(BaseModel):

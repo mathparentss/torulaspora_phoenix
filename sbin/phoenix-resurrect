@@ -42,6 +42,32 @@ ln -sf /opt/phoenix/dotfiles/my-theme.omp.json ~/.config/my-theme.omp.json
 grep -q "phoenix.sh" ~/.bashrc || echo "source /opt/phoenix/scripts/phoenix-functions.sh" >> ~/.bashrc
 EOF
 
+# 5.5 Validate Python virtual environment
+echo "[5.5] Validating Python virtual environment..."
+
+VENV_PATH="/opt/phoenix/phoenix.venv"
+REQUIREMENTS="/opt/phoenix/lib/python/requirements.txt"
+
+if [ ! -d "$VENV_PATH" ]; then
+  echo "  ⚠️  Virtual environment not found. Creating..."
+  sudo -u $SUDO_USER python3 -m venv "$VENV_PATH"
+fi
+
+if [ ! -f "$VENV_PATH/bin/activate" ]; then
+  echo "  ❌ Virtual environment corrupted. Recreating..."
+  rm -rf "$VENV_PATH"
+  sudo -u $SUDO_USER python3 -m venv "$VENV_PATH"
+fi
+
+if [ -f "$REQUIREMENTS" ]; then
+  echo "  📦 Installing Python dependencies..."
+  sudo -u $SUDO_USER "$VENV_PATH/bin/pip" install --quiet --upgrade pip
+  sudo -u $SUDO_USER "$VENV_PATH/bin/pip" install --quiet -r "$REQUIREMENTS"
+  echo "  ✅ Python environment validated ($(sudo -u $SUDO_USER "$VENV_PATH/bin/pip" list --format=freeze | wc -l) packages)"
+else
+  echo "  ⚠️  requirements.txt not found. Skipping dependency install."
+fi
+
 # 6. Start the battlestack (tiered, idempotent)
 docker compose -f configs/docker/docker-compose.tier1.yml up -d
 docker compose -f configs/docker/docker-compose.tier2.yml up -d

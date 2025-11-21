@@ -1,6 +1,25 @@
 # Phoenix Shell Functions - Quick Access Commands
 # Source this file in .bashrc for instant access
 
+# Cross-platform browser launcher
+open_browser() {
+  local url="$1"
+
+  if command -v cmd.exe &>/dev/null; then
+    # WSL2 Windows host
+    cmd.exe /c start "$url" 2>/dev/null
+  elif command -v xdg-open &>/dev/null; then
+    # Linux with X11/Wayland
+    xdg-open "$url" 2>/dev/null &
+  elif command -v open &>/dev/null; then
+    # macOS
+    open "$url" 2>/dev/null
+  else
+    # Fallback: just display URL
+    echo "🌐 Open manually: $url"
+  fi
+}
+
 # Quick navigation
 alias phoenix='cd /opt/phoenix && source phoenix.venv/bin/activate 2>/dev/null || true'
 alias phlogs='cd /opt/phoenix/var/logs'
@@ -51,15 +70,15 @@ phredis() {
 
 # Open UIs in browser
 phportainer() {
-    cmd.exe /c start http://localhost:9000
+    open_browser "http://localhost:9000"
 }
 
 phgrafana() {
-    cmd.exe /c start http://localhost:3000
+    open_browser "http://localhost:3000"
 }
 
 phadminer() {
-    cmd.exe /c start http://localhost:8080
+    open_browser "http://localhost:8080"
 }
 
 # Tier 4 management

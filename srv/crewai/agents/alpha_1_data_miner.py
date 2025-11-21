@@ -10,7 +10,7 @@ class Alpha1Agent:
     def __init__(self):
         self.db_conn = psycopg2.connect(
             host="localhost", port=5432, database="phoenix_core",
-            user="phoenix", password="${POSTGRES_PASSWORD}!"
+            user="phoenix", password=os.getenv('POSTGRES_PASSWORD')
         )
         self.agent_id = None
         self.codename = "Alpha-1"

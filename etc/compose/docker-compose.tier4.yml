@@ -9,8 +9,7 @@ services:
       - '--path.rootfs=/host'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     volumes:
-       - /proc:/host/proc:
-    external: true
+      - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/host:ro
     ports:
@@ -71,12 +70,14 @@ services:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: phoenix_cadvisor
     restart: unless-stopped
-    privileged: true
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - no-new-privileges:true
     devices:
       - /dev/kmsg
     volumes:
-       - /:/rootfs:
-    external: true
+      - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro

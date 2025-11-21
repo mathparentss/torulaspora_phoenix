@@ -1,0 +1,1 @@
+/opt/phoenix/bin/phoenix-status.sh

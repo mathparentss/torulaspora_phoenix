@@ -22,7 +22,7 @@ datasources:
     database: phoenix_core
     user: phoenix
     secureJsonData:
-      password: PhoenixDB_2025_Secure!
+      password: ${GRAFANA_DB_PASSWORD}
     jsonData:
       sslmode: disable
       postgresVersion: 1600  # PostgreSQL 16

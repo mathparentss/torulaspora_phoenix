@@ -10,8 +10,7 @@ services:
     ports:
       - "127.0.0.1:11434:11434"
     volumes:
-       - ollama_data:
-    external: true
+      - ollama_data:/root/.ollama
     environment:
       - OLLAMA_HOST=0.0.0.0
       - NVIDIA_VISIBLE_DEVICES=all
@@ -54,8 +53,7 @@ services:
       - "127.0.0.1:6333:6333"  # REST API
       - "127.0.0.1:6334:6334"  # gRPC
     volumes:
-       - qdrant_data:
-    external: true
+      - qdrant_data:/qdrant/storage
       - /opt/phoenix/etc/observability/production.yaml:/qdrant/config/production.yaml:ro
     environment:
       - QDRANT__SERVICE__API_KEY=${QDRANT_API_KEY}
@@ -73,14 +71,12 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    # Health check disabled - Qdrant container doesn't include curl/wget
-    # Service health verified via external monitoring
-    # healthcheck:
-    #   test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 3
-    #   start_period: 20s
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5 bash -c '</dev/tcp/localhost/6333' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     labels:
       - "phoenix.tier=2"
       - "phoenix.service=vector-db"

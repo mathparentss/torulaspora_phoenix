@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # NGINX — Reverse Proxy + Rate Limiting
+  # ============================================================================
+  phoenix_nginx:
+    image: nginx:1.25-alpine
+    container_name: phoenix_nginx
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:80:80"
+      - "127.0.0.1:443:443"
+    volumes:
+      - /opt/phoenix/etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /opt/phoenix/etc/nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - phoenix_tier3
+    depends_on:
+      - phoenix_receipts_api
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "phoenix.tier=5"
+      - "phoenix.service=reverse-proxy"
+
+  # ============================================================================
+  # EXPENSE EMPIRE — FastAPI Receipt Processing Service
+  # ============================================================================
+  phoenix_receipts_api:
+    build:
+      context: /opt/phoenix/srv/receipts
+      dockerfile: Dockerfile
+    container_name: phoenix_receipts
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      # Database
+      POSTGRES_HOST: phoenix_postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: phoenix_core
+      POSTGRES_USER: phoenix
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+      # Redis
+      REDIS_HOST: phoenix_redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      # JWT Authentication
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRY_HOURS: 24
+
+      # Ollama AI
+      OLLAMA_HOST: http://phoenix_ollama:11434
+      OLLAMA_PRIMARY_MODEL: llava:34b
+      OLLAMA_FALLBACK_MODEL: llava:13b
+
+      # File Storage
+      UPLOAD_DIR: /var/receipts_data
+      MAX_FILE_SIZE_MB: 10
+      ALLOWED_EXTENSIONS: png,jpg,jpeg,pdf
+
+      # Freemium Limits
+      FREE_TIER_MONTHLY_LIMIT: 10
+      FREE_TIER_TTL_DAYS: 7
+
+      # System
+      TZ: America/New_York
+      LOG_LEVEL: INFO
+    volumes:
+      - /opt/phoenix/var/phoenix_receipts_data:/var/receipts_data
+    networks:
+      - phoenix_tier1  # Access to postgres, redis
+      - phoenix_tier2  # Access to ollama
+      - phoenix_tier3  # Access to nginx
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - "phoenix.tier=5"
+      - "phoenix.service=receipts-api"
+
+networks:
+  phoenix_tier1:
+    external: true
+  phoenix_tier2:
+    external: true
+  phoenix_tier3:
+    external: true
